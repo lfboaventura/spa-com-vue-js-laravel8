@@ -17,6 +17,13 @@
               <h5>{{ user.name }}</h5>
             </span>
           </router-link>
+          <a
+            v-if="user.id !== userLogged.id"
+            style="cursor: pointer"
+            @click="setFollow(user.id)"
+            class=""
+            >{{ follow }}</a
+          >
         </grid-layout>
       </div>
     </span>
@@ -25,7 +32,7 @@
       <h6>
         <b>{{ friends ? "Seguindo" : "Não Seguindo Ninguém" }} </b>
       </h6>
-      <li class="collection-item avatar" v-for="item in friends" :key="item.id">
+      <li v-for="item in friends" :key="item.id">
         <router-link :to="'/page/' + item.id + '/' + $slug(item.name)">
           <span class="title">{{ item.name }}</span>
         </router-link>
@@ -44,7 +51,7 @@
     </span>
 
     <span slot="main">
-      <publish-content-social />
+      <publish-content-social v-if="this.$route.params.id == this.userLogged.id"/>
       <card-content-social
         v-for="item in listContents"
         :key="item.id"
@@ -68,7 +75,7 @@
           Carregar mais publicações...
         </button>
       </p>
-      <div v-scroll="handleScrollHome"></div>
+      <div v-scroll="handleScrollPage"></div>
     </span>
   </site-template>
 </template>
@@ -81,7 +88,7 @@ import GridLayout from "@/components/layouts/GridLayout";
 import PublishContentSocial from "@/components/social/PublishContentSocial";
 
 export default {
-  name: "Home",
+  name: "Page",
   components: {
     SiteTemplate,
     CardContentSocial,
@@ -95,57 +102,114 @@ export default {
     },
   },
   data() {
-    return { user: "", next_page_url: "", stopScroll: false, friends: false, followers: false };
+    return {
+      user: "",
+      next_page_url: "",
+      stopScroll: false,
+      userLogged: "",
+      follow: "Seguir",
+      friends: false,
+      followers: false,
+    };
   },
   created() {
     if (sessionStorage.getItem("user")) {
-      this.user = JSON.parse(sessionStorage.getItem("user"));
-      this.name = this.user.name;
-      this.email = this.user.email;
-
-      this.$http
-        .get(this.$urlAPI + `content/list`, {
-          headers: {
-            authorization: "Bearer " + this.$store.getters.getToken,
-          },
-        })
-        .then((response) => {
-          debugger;
-          if (response.data.status) {
-            this.$store.commit("setTimeline", response.data.contents.data);
-            this.next_page_url = response.data.contents.next_page_url;
-          }
-        })
-        .catch((error) => {
-          alert(error.message);
-        });
-
-      this.$http
-        .get(this.$urlAPI + `user/friends/` + this.user.id, {
-          headers: {
-            authorization: "Bearer " + this.$store.getters.getToken,
-          },
-        })
-        .then((response) => {
-          debugger
-          if (response.data.status) {
-            this.friends = response.data.friendsProfile;
-            this.followers = this.followers = response.data.followers.length === 0 ? false : response.data.followers;
-          }
-        })
-        .catch((error) => {
-          alert(error.message);
-        });
+      this.updatePage();
     } else {
       this.$router.push("/login");
     }
   },
+  watch:{
+    '$route':"updatePage",
+  },
   methods: {
-    handleScrollHome() {
+    updatePage() {
+      this.user = JSON.parse(sessionStorage.getItem("user"));
+      this.userLogged = this.user;
+
+      this.$http
+        .get(this.$urlAPI + `content/page/` + this.$route.params.id, {
+          headers: {
+            authorization: "Bearer " + this.$store.getters.getToken,
+          },
+        })
+        .then((response) => {
+          if (response.data.status) {
+            this.$store.commit("setTimeline", response.data.contents.data);
+            this.next_page_url = response.data.contents.next_page_url;
+            this.user = response.data.userPage;
+          }
+        })
+        .catch((error) => {
+          alert(error.message);
+        });
+
+      this.follow = "Seguir";
+
+      this.$http
+        .get(this.$urlAPI + `user/friends/` + this.$route.params.id, {
+          headers: {
+            authorization: "Bearer " + this.$store.getters.getToken,
+          },
+        })
+        .then((response) => {
+          if (response.data.status) {
+            this.followers = response.data.followers.length === 0 ? false : response.data.followers;
+            this.friends =
+              this.$route.params.id != this.userLogged.id
+                ? response.data.friendsPage.length === 0
+                  ? false
+                  : response.data.friendsPage
+                : response.data.friendsProfile.length === 0
+                ? false
+                : response.data.friendsProfile;
+
+            // const following = response.data.friendsProfile.find(
+            //   (e) => (e = this.user)
+            // );
+            this.follow = response.data.friendsProfile ? "Seguindo" : "Seguir";
+          }
+        })
+        .catch((error) => {
+          alert(error.message);
+        });
+    },
+    setFollow(id) {
+      this.follow = "Seguir";
+      this.$http
+        .post(
+          this.$urlAPI + `user/follow`,
+          {
+            id: id,
+          },
+          {
+            headers: {
+              authorization: "Bearer " + this.$store.getters.getToken,
+            },
+          }
+        )
+        .then((response) => {
+          debugger;
+          if (response.data.status) {
+            this.follow = response.data.following ? "Seguindo" : "Seguir";
+            this.followers = response.data.followers.length === 0 ? false : response.data.followers;
+          } else {
+            let errors = "";
+            for (let e of Object.values(response.data.errors)) {
+              errors += e + " ";
+            }
+            alert(response.data.message + "</br>" + errors);
+          }
+        })
+        .catch((error) => {
+          alert(error.message);
+        });
+    },
+    handleScrollPage() {
       if (this.stopScroll) {
         return;
       }
-      if (this.$route.name !== "Home") {
+      if (this.$route.name !== "Page") {
         return;
       }
       if (window.scrollY >= document.body.clientHeight - 970) {

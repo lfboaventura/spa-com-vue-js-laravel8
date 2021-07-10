@@ -56,8 +56,8 @@ export default {
     };
   },
   created() {
-    if (sessionStorage.getItem("user")) {
-      this.user = JSON.parse(sessionStorage.getItem("user"));
+    if (this.$store.getters.getUser) {
+      this.user = this.$store.getters.getUser;
       this.name = this.user.name;
       this.email = this.user.email;
     } else {
@@ -80,20 +80,21 @@ export default {
     saveProfile() {
       this.$http
         .put(
-          this.$urlAPI + `profile`,
+          this.$urlAPI + `user/profile`,
           {
             name: this.name,
             image: this.image,
             password: this.password,
             password_confirmation: this.password_confirmation,
           },
-          { headers: { authorization: "Bearer " + this.user.token } }
+          { headers: { authorization: "Bearer " + this.$store.getters.getToken } }
         )
         .then((response) => {
           if (response.data.status) {
             if (response.data.user.token) {
               this.user.image = response.data.user.image;
               this.name = response.data.user.name;
+              this.$store.commit("setUser", response.data.user);
               sessionStorage.setItem(
                 "user",
                 JSON.stringify(response.data.user)

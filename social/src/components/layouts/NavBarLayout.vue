@@ -1,11 +1,12 @@
 <template>
-
   <nav :class="color || 'green darken-3'">
     <div class="container">
       <div class="nav-wrapper">
-        <router-link :to="url || '/'" class="brand-logo">{{ logo || "Site" }}</router-link>
+        <router-link :to="url || '/'" class="brand-logo">{{
+          logo || "Site"
+        }}</router-link>
         <ul id="nav-mobile" class="right hide-on-med-and-down">
-          <slot/>
+          <slot />
         </ul>
       </div>
     </div>

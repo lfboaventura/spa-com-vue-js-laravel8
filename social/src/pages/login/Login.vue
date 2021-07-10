@@ -42,6 +42,7 @@ export default {
         .then((response) => {
           if (response.data.status) {
             if (response.data.user.token) {
+              this.$store.commit("setUser", response.data.user);
               sessionStorage.setItem(
                 "user",
                 JSON.stringify(response.data.user)

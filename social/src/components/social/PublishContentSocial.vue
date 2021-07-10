@@ -37,7 +37,7 @@ import ButtonComponents from "@/components/forms/ButtonComponents";
 
 export default {
   name: "PublishContentSocial",
-  props: ["user"],
+  props: [],
   data() {
     return {
       content: { title: "", text: "", link: "", image: "" },
@@ -55,13 +55,15 @@ export default {
             image: this.content.image,
           },
           {
-            headers: { authorization: "Bearer " + this.user.token },
+            headers: {
+              authorization: "Bearer " + this.$store.getters.getToken,
+            },
           }
         )
         .then((response) => {
-          debugger;
           if (response.data.status) {
-            alert(response.data.message);
+            this.content = { title: "", text: "", link: "", image: "" };
+            this.$store.commit("setTimeline", response.data.contents.data);
           } else {
             let errors = "";
             for (let e of Object.values(response.data.errors)) {

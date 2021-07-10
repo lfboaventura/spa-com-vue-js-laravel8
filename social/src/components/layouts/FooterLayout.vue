@@ -19,7 +19,7 @@
     <div class="footer-copyright">
       <div class="container">
         © {{ year || "2021" }} Copyright {{ logo || "Site" }}
-        <a class="grey-text text-lighten-4 right" href="#!">More Links</a>
+        <a class="grey-text text-lighten-4 right" href="#!"></a>
       </div>
     </div>
   </footer>

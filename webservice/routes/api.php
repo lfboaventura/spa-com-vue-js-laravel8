@@ -22,20 +22,40 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'login']);
 
-
 Route::middleware('auth:api')->group(function () {
-    Route::put('/profile', [UserController::class, 'profile']);
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-    Route::post('/content/add', [ContentController::class, 'add']);
-    // Route::prefix('content')->group(function () {
-    //     Route::post('add', [ContentController::class, 'add']);
-    // });
+    Route::prefix('user')->group(function () {
+        Route::put('profile', [UserController::class, 'profile']);
+        Route::post('follow', [UserController::class, 'follow']);
+        Route::get('friends/{id}', [UserController::class, 'friends']);
+    });
+    Route::prefix('content')->group(function () {
+        Route::post('add', [ContentController::class, 'add']);
+        Route::get('list', [ContentController::class, 'list']);
+        Route::put('liked/{id}', [ContentController::class, 'liked']);
+        Route::post('comment/{id}', [ContentController::class, 'comment']);
+        Route::get('page/{id}', [ContentController::class, 'page']);
+    });
 });
 
 Route::get('/testes', function (Request $request) {
-    $user = User::find(1);
+    $content = Content::find(14);
+    $user = User::find(5);
+    $user->comments()->create(
+        [
+            'content_id' =>  $content->id,
+            'text' => 'usuário 1',
+        ]
+    );
+    return $content;
+/*
+    $contents = Content::all();
+    foreach ($contents as $key => $value) {
+        $value->delete();
+    }
+    */
     /* conteudos */
     // $user->contents()->create(
     //     [
@@ -67,7 +87,7 @@ Route::get('/testes', function (Request $request) {
 
     /* add comentários*/
     /*
-    $content = Content::find(1);
+    $content = Content::find(14);
     $user = User::find(1);
     $user->comments()->create(
         [

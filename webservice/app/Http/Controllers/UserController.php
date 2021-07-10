@@ -10,6 +10,61 @@ use Illuminate\Support\Facades\Validator;
 class UserController extends Controller
 {
 
+    public function friends($id, Request $request)
+    {
+        $userLogged = $request->user();
+        $userPage = User::find($id);
+        $followers = $userPage->followers;
+
+        if ($userLogged->id === $userPage->id){
+            $userPage = null;
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Amigos seguidos!',
+            'friendsPage' => $userPage ? $userPage->friends : [],
+            'friendsProfile' => $userPage ? ($userLogged->friends()->find($userPage->id) ? true : false) : $userLogged->friends,
+            'followers' => $followers,
+        ], 201);
+    }
+
+    public function follow(Request $request)
+    {
+        $data = $request->all();
+        $user = $request->user();
+        $friend = User::find($data['id']);;
+        if (!$friend) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Amigo não localizado!',
+                'errors' => [],
+            ], 201);
+        }
+        if ($user->id === $friend->id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Usuário logado não pode seguir ele mesmo!',
+                'errors' => [],
+            ], 201);
+        }
+        try {
+            $user->friends()->toggle($friend->id);
+            return response()->json([
+                'status' => true,
+                'message' => 'Seguindo amigo!',
+                'following' => $user->friends()->find($friend->id) ? true : false,
+                'followers' => $friend->followers,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Erro ao seguir amigo!',
+                'errors' => $e->getPrevious(),
+            ], 201);
+        }
+    }
+
     public function register(Request $request)
     {
         // $user = User::find(1);
@@ -38,7 +93,6 @@ class UserController extends Controller
             ]);
 
             $user->token = $user->createToken($user->email)->accessToken;
-            $user->image = asset($user->image);
 
             return response()->json([
                 'status' => true,
@@ -79,7 +133,6 @@ class UserController extends Controller
 
         $user = auth()->user();
         $user->token = $user->createToken($user->email)->accessToken;
-        $user->image = asset($user->image);
         return response()->json([
             'status' => true,
             'message' => 'Login realizado com sucesso!',
@@ -164,8 +217,9 @@ class UserController extends Controller
             }
 
             if ($user->image) {
-                if (file_exists($user->image)) {
-                    unlink($user->image);
+                $imgUser = str_replace(asset('/'), '', $user->image);
+                if (file_exists($imgUser)) {
+                    unlink($imgUser);
                 }
             }
 
@@ -182,7 +236,6 @@ class UserController extends Controller
 
         try {
             $user->save();
-            $user->image = asset($user->image);
             $user->token = $user->createToken($user->email)->accessToken;
 
             return response()->json([

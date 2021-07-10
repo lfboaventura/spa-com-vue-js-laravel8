@@ -23,4 +23,11 @@ class Comment extends Model
     {
         return $this->belongsTo(Content::class);
     }
+
+    public function getCreatedAtAttribute($value)
+    {
+        return \Carbon\Carbon::parse($value)->format('d/m/Y H:i:s');
+        return date('d/m/Y H:i:s',$value);
+    }
+
 }

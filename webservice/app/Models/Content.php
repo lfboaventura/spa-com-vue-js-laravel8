@@ -30,4 +30,9 @@ class Content extends Model
         return $this->belongsToMany(User::class, 'likes', 'content_id', 'user_id');
     }
 
+    public function getCreatedAtAttribute($value)
+    {
+        return \Carbon\Carbon::parse($value)->format('d/m/Y H:i:s');
+        return date('d/m/Y H:i:s',$value);
+    }
 }

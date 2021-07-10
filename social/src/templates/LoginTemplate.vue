@@ -25,13 +25,13 @@
     <footer-layout
       color="green darken-3"
       logo="Social"
-      description="Teste de descrição"
+      description=""
       year="2021"
     >
-      <li><a class="grey-text text-lighten-3" href="#!">Link 1</a></li>
+      <!-- <li><a class="grey-text text-lighten-3" href="#!">Link 1</a></li>
       <li><a class="grey-text text-lighten-3" href="#!">Link 2</a></li>
       <li><a class="grey-text text-lighten-3" href="#!">Link 3</a></li>
-      <li><a class="grey-text text-lighten-3" href="#!">Link 4</a></li>
+      <li><a class="grey-text text-lighten-3" href="#!">Link 4</a></li> -->
     </footer-layout>
   </span>
 </template>
@@ -51,15 +51,11 @@ export default {
     CardMenuLayout,
   },
   data() {
-    return {
-      user: false,
-    };
+    return {};
   },
   created() {
-    if (sessionStorage.getItem("user")) {
-      this.user = JSON.parse(sessionStorage.getItem("user"));
-    } else {
-      this.user = false;
+    if (this.$store.getters.getUser) {
+      this.$router.push("/");
     }
   },
 };
