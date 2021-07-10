@@ -1,3 +1,6 @@
+![Imagem](https://github.com/lfboaventura/spa-com-vue-js-laravel8/blob/master/imagem.PNG)
+
+
 ## SPA com VueJS e API em Laravel.
 
 ### Sobre
@@ -58,4 +61,4 @@ _Na pasta "social":_
 > npm start
 
 
-**Status:** Finalizada.
+**Status:** Finalizado.
